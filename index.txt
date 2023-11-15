@@ -1,0 +1,64 @@
+const menu = require('./menu.json');
+
+const express = require("express");
+
+const app = express();
+
+app.use(express.json());
+
+app.get("/", (req, res) => {
+    res.send("Hello World!")
+});
+
+app.listen(3000, () => {
+    console.log("Server running on port 3000")
+});
+
+
+app.get("/menu", (req, res) => {
+    res.status(200).json({ msg: 'Todo correcto', menu:menu});
+});
+
+app.get("/menu/:id", (req, res) => {
+    const id = parseInt(req.params.id)
+    res.status(200).json({ msg: 'ID recibido', id:id, item:menu[id-1]});
+});
+
+
+app.get("/combos", (req, res) => {
+    res.json(menu.filter((item) => item.tipo === "combo"))
+});
+
+
+app.get("/principales", (req, res) => {
+    res.json(menu.filter((item) => item.tipo === "principal"))
+});
+
+
+app.get("/postres", (req, res) => {
+    res.json(menu.filter((item) => item.tipo === "postre"))
+});
+
+app.post("/pedido", (req,res) => {
+    const pedido = req.body;
+    let precio = 0
+
+    if (!req.body.productos){
+        res.status(400).json({msg: "No ingresaste ningun producto a tu pedido"})
+        return;
+    }
+    /* let item = pedido.find((item) => item.id === parseInt(id)); */
+    pedido.productos.forEach(producto => {
+        let menuProducto = menu.find((prod) => prod.id === parseInt(producto.id));
+        console.log(menuProducto)
+        if(!menuProducto){
+            res.status(404).json({msg: 'No se encontro el plato ' + producto.id + ' en el menu'})
+            return;
+        }
+        precio += menuProducto.precio * producto.cantidad;
+    });
+    res.json({ msg: 'Pedido recibido', precio:precio});
+})
+
+
+

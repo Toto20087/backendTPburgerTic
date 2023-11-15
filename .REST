@@ -1,0 +1,23 @@
+GET http://localhost:3000/combos
+
+###
+
+POST http://localhost:3000/pedido
+Content-Type: application/json
+
+{
+    "productos": [
+        {
+            "id": 1,
+            "cantidad": 3
+        },
+        {
+            "id": 2,
+            "cantidad": 1
+        }
+    ]
+}
+
+###
+
+GET http://localhost:3000/pedidos/1
