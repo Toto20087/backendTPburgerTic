@@ -146,7 +146,7 @@ app.post('/pedido', (req, res) => {
 app.get('/pedidos/:id', (req, res) => {
     const usuarioId = req.params.id;
           
-    // Consulta SQL para obtener los pedidos del usuario y sus detalles
+   
     const query = `
         SELECT p.id, p.fecha, p.estado, p.id_usuarios as id_usuario, pl.id as plato_id, pl.nombre as plato_nombre, pl.precio as plato_precio, pp.cantidad FROM pedidos p JOIN PEDIDOS_PLATOS pp ON p.id = pp.id_pedido JOIN platos pl ON pp.id_plato = pl.id WHERE p.id_usuarios = ?
     `;

@@ -145,8 +145,7 @@ app.post('/pedido', (req, res) => {
 
 app.get('/pedidos/:id', (req, res) => {
     const usuarioId = req.params.id;
-          
-    // Consulta SQL para obtener los pedidos del usuario y sus detalles
+
     const query = `
         SELECT p.id, p.fecha, p.estado, p.id_usuarios as id_usuario, pl.id as plato_id, pl.nombre as plato_nombre, pl.precio as plato_precio, pp.cantidad FROM pedidos p JOIN PEDIDOS_PLATOS pp ON p.id = pp.id_pedido JOIN platos pl ON pp.id_plato = pl.id WHERE p.id_usuarios = ?
     `;
@@ -156,7 +155,7 @@ app.get('/pedidos/:id', (req, res) => {
                 console.error('Error al realizar la consulta:', error);
                 res.status(500).json({ error: 'Error interno del servidor' });
               } else {
-                // Procesar los resultados y dar el formato adecuado
+
                 const formattedResults = results.map(row => {
                   return {
                     id: row.id,
@@ -178,3 +177,47 @@ app.get('/pedidos/:id', (req, res) => {
               }
             });
           });
+
+
+
+app.post("/usuarios", (req, res) => {
+    let nombre = req.body.nombre;
+    let apellido = req.body.apellido;
+    let email = req.body.email;
+    let password = req.body.password;
+
+    console.log(nombre, apellido, email, password);
+
+    connection.query("INSERT INTO usuarios (nombre, apellido, email, password) VALUES (?, ?, ?, ?)", [nombre, apellido, email, password], (err, resultado) => {
+        if (err) {
+            res.status(500).json({ msg: ("Error insertando usuario: " + err) });
+            return;
+        }
+        res.json({ id: resultado.insertId });   
+    });
+});
+
+app.post("/login", (req, res) => {
+    let email = req.body.email;
+    let password = req.body.password;
+
+    connection.query("SELECT * FROM usuarios WHERE email = ? AND password = ?", [email, password], (err, resultado) => {
+
+        let id = resultado[0].id;
+        let nombre = resultado[0].nombre;
+        let apellido = resultado[0].apellido;
+
+        if (err) {
+            res.status(500).json({ msg: ("Error insertando usuario: " + err) });
+            return;
+        }
+        if (resultado.length === 0) {
+            res.status(401).json({ msg: "Usuario no encontrado" });
+            return;
+        }
+
+    res.json({id: id,
+              nombre: nombre,
+              apellido: apellido,
+              email: email});   
+})});

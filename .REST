@@ -21,3 +21,26 @@ Content-Type: application/json
 ###
 
 GET http://localhost:3000/pedidos/1
+
+###
+
+POST http://localhost:3000/usuarios
+Content-Type: application/json
+
+{
+    "nombre": "Juan",
+    "apellido": "Perez",
+    "email": "juanperez@gmail.com",
+    "password": "123456"
+}
+
+
+###
+POST http://localhost:3000/login
+Content-Type: application/json
+
+{
+    "email": "juanperez@gmail.com",
+    "password": "123456"
+}
+
