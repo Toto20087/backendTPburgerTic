@@ -1,6 +1,7 @@
 const menu = require('./menu.json');
 const mysql = require("mysql2");
 const express = require("express");
+const jwt = require('jsonwebtoken');
 const app = express();
 app.use(express.json());
 
@@ -115,36 +116,66 @@ app.get("/postres", (req, res) => {
     });
 });
 
-app.post('/pedido', (req, res) => {
+function authenticateToken(req, res, next) {
+    const token = req.headers['authorization'];
+  
+    if (token == null) return res.sendStatus(401);
+
+    let user_id = req.user.id;
+  
+    jwt.verify(token, user_id, (err, user) => {
+      if (err) return res.sendStatus(403);
+      req.user = user;
+      next();
+    });
+  }
+
+
+app.post('/pedido', authenticateToken, (req, res) => {
     const pedido = req.body;
     let id_pedido = 0;
+  
     if (!pedido.productos) {
-        res.status(500).json({ msg: 'Tenes que ingresar cosas para tu pedido' });
-        return;
+      res.status(500).json({ msg: 'Tienes que ingresar productos para tu pedido' });
+      return;
     }
-    connection.query(`INSERT INTO pedidos (id_usuarios, fecha, estado) VALUES (?, ?, ?)`, [1, new Date(), "pendiente"], (err, resultado) => {
+  
+    const usuarioId = req.user.id; 
+  
+    connection.query(
+      'INSERT INTO pedidos (id_usuarios, fecha, estado) VALUES (?, ?, ?)',
+      [usuarioId, new Date(), 'pendiente'],
+      (err, resultado) => {
         if (err) {
-            res.status(500).json({ msg: ("Error insertando pedido: " + err) });
-            return;
+          res.status(500).json({ msg: 'Error insertando pedido: ' + err });
+          return;
         }
+  
         id_pedido = resultado.insertId;
+  
         pedido.productos.forEach((item, i) => {
-            connection.query(`INSERT INTO pedidos_platos (id_pedido, id_plato, cantidad) VALUES (?, ?, ?)`, [id_pedido, item.id, item.cantidad], (err, result) => {
-                if (err) {
-                    res.status(500).json({ msg: ("No se pudo registar el pedido porque " + err) });
-                    return;
-                }
-
-                if (i === pedido.productos.length - 1) {
-                    res.json({ id: id_pedido });
-                }
-            });
+          connection.query(
+            'INSERT INTO pedidos_platos (id_pedido, id_plato, cantidad) VALUES (?, ?, ?)',
+            [id_pedido, item.id, item.cantidad],
+            (err, result) => {
+              if (err) {
+                res.status(500).json({ msg: 'No se pudo registrar el pedido porque ' + err });
+                return;
+              }
+  
+              if (i === pedido.productos.length - 1) {
+                res.json({ id: id_pedido });
+              }
+            }
+          );
         });
-    });
-});
+      }
+    );
+  });
+  
 
 app.get('/pedidos/:id', (req, res) => {
-    const usuarioId = req.params.id;
+    const usuarioId = req.user.id;
 
     const query = `
         SELECT p.id, p.fecha, p.estado, p.id_usuarios as id_usuario, pl.id as plato_id, pl.nombre as plato_nombre, pl.precio as plato_precio, pp.cantidad FROM pedidos p JOIN PEDIDOS_PLATOS pp ON p.id = pp.id_pedido JOIN platos pl ON pp.id_plato = pl.id WHERE p.id_usuarios = ?
